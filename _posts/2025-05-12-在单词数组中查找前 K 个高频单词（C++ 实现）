@@ -1,0 +1,125 @@
+```markdown
+---
+title: "在单词数组中查找前 K 个高频单词（C++ 实现）"
+date: 2023-10-15
+categories: [算法, C++]
+tags: [哈希表, 排序, 优先队列]
+---
+
+## 问题描述
+给定一个单词数组 `words` 和一个整数 `k`，返回出现频率前 `k` 高的单词。如果两个单词出现频率相同，则按字典序排序。
+
+**示例：**
+```plaintext
+输入: words = ["i", "love", "leetcode", "i", "love", "coding"], k = 2
+输出: ["i", "love"]
+解释: 
+- "i" 和 "love" 各出现 2 次
+- "leetcode" 和 "coding" 各出现 1 次
+按频率和字典序排序后取前 2 个
+```
+
+---
+
+## 解题思路
+1. **统计频率**：用 `unordered_map` 记录单词出现次数
+2. **自定义排序**：
+   - 频率高的在前
+   - 频率相同则按字典序升序排列
+3. **提取前 K 个**：排序后取前 `k` 个元素
+
+---
+
+## C++ 实现
+```cpp
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <algorithm>
+
+using namespace std;
+
+vector<string> topKFrequent(vector<string>& words, int k) {
+    // 1. 统计频率
+    unordered_map<string, int> freq;
+    for (const string& word : words) {
+        freq[word]++;
+    }
+
+    // 2. 提取单词并排序
+    vector<string> result;
+    for (const auto& pair : freq) {
+        result.push_back(pair.first);
+    }
+
+    // 自定义排序规则
+    sort(result.begin(), result.end(), [&](const string& a, const string& b) {
+        if (freq[a] == freq[b]) {
+            return a < b;  // 频率相同，字典序升序
+        }
+        return freq[a] > freq[b];  // 频率降序
+    });
+
+    // 3. 返回前 k 个
+    return vector<string>(result.begin(), result.begin() + k);
+}
+```
+
+---
+
+## 复杂度分析
+| 步骤               | 时间复杂度       | 空间复杂度 |
+|--------------------|------------------|------------|
+| 统计频率           | O(n)             | O(m)       |
+| 排序（m 个不同单词）| O(m log m)       | O(m)       |
+| **总计**           | **O(n + m log m)** | **O(m)**  |
+
+---
+
+## 测试用例
+```cpp
+int main() {
+    vector<string> words = {"i", "love", "leetcode", "i", "love", "coding"};
+    int k = 2;
+    vector<string> ans = topKFrequent(words, k);
+    for (const string& word : ans) {
+        cout << word << " ";  // 输出: i love
+    }
+    return 0;
+}
+```
+
+---
+
+## 优化版（优先队列）
+```cpp
+vector<string> topKFrequent(vector<string>& words, int k) {
+    unordered_map<string, int> freq;
+    for (const string& word : words) freq[word]++;
+
+    auto cmp = [&](const string& a, const string& b) {
+        if (freq[a] == freq[b]) return a > b;
+        return freq[a] < freq[b];
+    };
+
+    priority_queue<string, vector<string>, decltype(cmp)> pq(cmp);
+    for (const auto& pair : freq) pq.push(pair.first);
+
+    vector<string> result;
+    while (k--) {
+        result.push_back(pq.top());
+        pq.pop();
+    }
+    return result;
+}
+```
+**优势**：时间复杂度优化至 `O(n + m log k)`，适合大数据量场景
+
+---
+
+## 总结
+- **核心技巧**：哈希表统计 + 自定义排序
+- **相似题目**：
+  - [LeetCode 347. 前 K 个高频元素](https://leetcode.cn/problems/top-k-frequent-elements/)
+  - [LeetCode 692. 前K个高频单词](https://leetcode.cn/problems/top-k-frequent-words/)
+- **应用场景**：词频统计、热门标签筛选等
